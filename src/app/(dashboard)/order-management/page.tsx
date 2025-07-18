@@ -219,13 +219,13 @@ const OrderManagement = () => {
     );
   };
 
-  const handleSelectAll = () => {
-    if (selectedOrders.length === filteredOrders.length) {
-      setSelectedOrders([]);
-    } else {
-      setSelectedOrders(filteredOrders.map((order) => order.orderId));
-    }
-  };
+  // const handleSelectAll = () => {
+  //   if (selectedOrders.length === filteredOrders.length) {
+  //     setSelectedOrders([]);
+  //   } else {
+  //     setSelectedOrders(filteredOrders.map((order) => order.orderId));
+  //   }
+  // };
 
   // Action handlers
   const handleViewOrder = (order: Order) => {

@@ -179,11 +179,7 @@ const CreateOrderForm = () => {
     }
   };
 
-  interface HandleSubmitEvent extends React.FormEvent<HTMLFormElement> {
-    // TODO: Add form-specific props
-  }
-
-  const handleSubmit = async (e: HandleSubmitEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
