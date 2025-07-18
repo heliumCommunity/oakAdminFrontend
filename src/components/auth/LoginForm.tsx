@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { login as loginService } from "@/services/auth";
 
 export default function LoginForm() {
@@ -11,7 +10,6 @@ export default function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

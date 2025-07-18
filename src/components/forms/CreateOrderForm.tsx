@@ -8,6 +8,7 @@ import { ClientInformation } from "../order/ClientInformation";
 import { MeasurementInformation } from "../order/MeasurementInformation";
 import { ProductionTimeline } from "../order/ProductionTimeline";
 import { InstructionsAndDesignRefs } from "../order/InstructionsAndDesignRefs";
+import CustomerSelection from "../order/CustomerSelection";
 
 const CreateOrderForm = () => {
   const [currentStep] = useState(1);
@@ -39,6 +40,80 @@ const CreateOrderForm = () => {
     customMeasurements: [],
     additionalFitNotes: "",
   });
+
+  interface Customer {
+    id: string;
+    fullName: string;
+    emailAddress: string;
+    phoneNumber: string;
+    clientType: string;
+    address: string;
+    measurements?: {
+      chest: string;
+      waist: string;
+      hips: string;
+      shoulderWidth: string;
+      sleeveLength: string;
+      inseam: string;
+      height: string;
+      neck: string;
+    };
+    additionalFitNotes?: string;
+  }
+
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null
+  );
+
+  const handleCustomerSelect = (customer: Customer | null) => {
+    setSelectedCustomer(customer);
+
+    if (customer) {
+      // Auto-populate form with customer data
+      setFormData((prev) => ({
+        ...prev,
+        fullName: customer.fullName,
+        emailAddress: customer.emailAddress,
+        phoneNumber: customer.phoneNumber,
+        clientType: customer.clientType,
+        address: customer.address,
+        standardMeasurements: customer.measurements || {
+          chest: "",
+          waist: "",
+          hips: "",
+          shoulderWidth: "",
+          sleeveLength: "",
+          inseam: "",
+          height: "",
+          neck: "",
+        },
+        additionalFitNotes: customer.additionalFitNotes || "",
+      }));
+    } else {
+      // Clear form when no customer is selected
+      setFormData({
+        fullName: "",
+        emailAddress: "",
+        phoneNumber: "",
+        clientType: "",
+        address: "",
+        saveClientInfo: true,
+        measurementUnit: "cm",
+        standardMeasurements: {
+          chest: "",
+          waist: "",
+          hips: "",
+          shoulderWidth: "",
+          sleeveLength: "",
+          inseam: "",
+          height: "",
+          neck: "",
+        },
+        customMeasurements: [],
+        additionalFitNotes: "",
+      });
+    }
+  };
 
   interface StandardMeasurements {
     chest: string;
@@ -104,7 +179,9 @@ const CreateOrderForm = () => {
     }
   };
 
-  interface HandleSubmitEvent extends React.FormEvent<HTMLFormElement> {}
+  interface HandleSubmitEvent extends React.FormEvent<HTMLFormElement> {
+    // TODO: Add form-specific props
+  }
 
   const handleSubmit = async (e: HandleSubmitEvent) => {
     e.preventDefault();
@@ -418,6 +495,11 @@ const CreateOrderForm = () => {
 
         {/* Progress Steps */}
         <ProgressSteps currentStep={currentStep} steps={steps} />
+
+        <CustomerSelection
+          onCustomerSelect={handleCustomerSelect}
+          selectedCustomer={selectedCustomer}
+        />
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Client Information */}

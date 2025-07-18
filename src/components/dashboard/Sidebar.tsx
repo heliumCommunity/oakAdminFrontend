@@ -85,6 +85,14 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
             Order Management
           </Link>
           <Link
+            href="/order-management"
+            className="flex items-center gap-2 hover:text-primary"
+            onClick={onClose}
+          >
+            <ChartColumn className="w-5 h-5" />
+            Customers
+          </Link>
+          <Link
             href="#"
             className="flex items-center gap-2 hover:text-primary"
             onClick={onClose}

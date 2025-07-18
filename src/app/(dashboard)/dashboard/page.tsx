@@ -1,6 +1,5 @@
 // app/dashboard/page.tsx
 "use client";
-import DashboardLayout from "@/components/Layout/Dashboard/DashboardLayout";
 import SummaryCard from "@/components/Layout/SummaryyCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
