@@ -1,22 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle, X } from "lucide-react";
-import { ProgressSteps } from "../order/ProgressSteps";
 import { ClientInformation } from "../order/ClientInformation";
+import OrderInformation from "../order/OrderInformation";
 import { MeasurementInformation } from "../order/MeasurementInformation";
 import { ProductionTimeline } from "../order/ProductionTimeline";
 import { InstructionsAndDesignRefs } from "../order/InstructionsAndDesignRefs";
 import CustomerSelection from "../order/CustomerSelection";
+import StickyFormNavigator, {
+  useFormSections,
+} from "../order/StickyFormNavigator";
 
 const CreateOrderForm = () => {
-  const [currentStep] = useState(1);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form data state
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<CreateOrderFormData>({
     // Client Info
     fullName: "",
     emailAddress: "",
@@ -24,6 +26,17 @@ const CreateOrderForm = () => {
     clientType: "",
     address: "",
     saveClientInfo: true,
+    orderItems: [
+      {
+        productType: "",
+        specificItem: "",
+        color: "",
+        quantity: 1,
+        size: "",
+        material: "",
+        specialInstructions: "",
+      },
+    ],
 
     // Measurements
     measurementUnit: "cm",
@@ -40,6 +53,27 @@ const CreateOrderForm = () => {
     customMeasurements: [],
     additionalFitNotes: "",
   });
+
+  // NEW - Memoized to prevent unnecessary re-renders
+  const memoizedFormData = useMemo(() => {
+    return {
+      ...formData,
+      standardMeasurements: {
+        chest: parseFloat(formData.standardMeasurements.chest) || 0,
+        waist: parseFloat(formData.standardMeasurements.waist) || 0,
+        hips: parseFloat(formData.standardMeasurements.hips) || 0,
+        shoulderWidth:
+          parseFloat(formData.standardMeasurements.shoulderWidth) || 0,
+        sleeveLength:
+          parseFloat(formData.standardMeasurements.sleeveLength) || 0,
+        inseam: parseFloat(formData.standardMeasurements.inseam) || 0,
+        height: parseFloat(formData.standardMeasurements.height) || 0,
+        neck: parseFloat(formData.standardMeasurements.neck) || 0,
+      },
+    };
+  }, [formData]);
+
+  const { sections, completedSections } = useFormSections(memoizedFormData);
 
   interface Customer {
     id: string;
@@ -60,10 +94,24 @@ const CreateOrderForm = () => {
     };
     additionalFitNotes?: string;
   }
+  interface OrderItem {
+    productType: string;
+    specificItem: string;
+    color: string;
+    quantity: number;
+    size?: string;
+    material?: string;
+    specialInstructions?: string;
+  }
 
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   );
+
+  const handleSectionNavigation = (sectionId: string) => {
+    // Optional: You can add any additional logic here when a section is clicked
+    console.log(`Navigating to section: ${sectionId}`);
+  };
 
   const handleCustomerSelect = (customer: Customer | null) => {
     setSelectedCustomer(customer);
@@ -98,6 +146,17 @@ const CreateOrderForm = () => {
         clientType: "",
         address: "",
         saveClientInfo: true,
+        orderItems: [
+          {
+            productType: "",
+            specificItem: "",
+            color: "",
+            quantity: 1,
+            size: "",
+            material: "",
+            specialInstructions: "",
+          },
+        ],
         measurementUnit: "cm",
         standardMeasurements: {
           chest: "",
@@ -132,7 +191,7 @@ const CreateOrderForm = () => {
     value: string;
   }
 
-  interface FormData {
+  interface CreateOrderFormData {
     // Client Info
     fullName: string;
     emailAddress: string;
@@ -143,17 +202,32 @@ const CreateOrderForm = () => {
 
     // Measurements
     measurementUnit: string;
-    standardMeasurements: StandardMeasurements;
+    standardMeasurements: {
+      chest: string;
+      waist: string;
+      hips: string;
+      shoulderWidth: string;
+      sleeveLength: string;
+      inseam: string;
+      height: string;
+      neck: string;
+    };
     customMeasurements: CustomMeasurement[];
     additionalFitNotes: string;
+
+    orderItems: OrderItem[];
   }
 
-  type UpdateSection = "client" | "measurements" | "standardMeasurements";
+  type UpdateSection =
+    | "client"
+    | "measurements"
+    | "standardMeasurements"
+    | "orderItems";
 
   type UpdateData =
     | Partial<
         Pick<
-          FormData,
+          CreateOrderFormData,
           | "fullName"
           | "emailAddress"
           | "phoneNumber"
@@ -162,14 +236,22 @@ const CreateOrderForm = () => {
           | "saveClientInfo"
         >
       >
-    | Partial<Pick<FormData, "measurementUnit" | "additionalFitNotes">>
-    | Partial<StandardMeasurements>;
+    | Partial<
+        Pick<CreateOrderFormData, "measurementUnit" | "additionalFitNotes">
+      >
+    | Partial<StandardMeasurements>
+    | OrderItem[];
 
   const updateFormData = (section: UpdateSection, data: UpdateData) => {
     if (section === "standardMeasurements") {
       setFormData((prev) => ({
         ...prev,
         standardMeasurements: { ...prev.standardMeasurements, ...data },
+      }));
+    } else if (section === "orderItems") {
+      setFormData((prev) => ({
+        ...prev,
+        orderItems: data as OrderItem[],
       }));
     } else {
       setFormData((prev) => ({
@@ -249,20 +331,6 @@ const CreateOrderForm = () => {
       setIsSubmitting(false);
     }
   };
-
-  // Step navigation
-  const steps = [
-    { number: 1, title: "Client Info", description: "Basic client details" },
-    {
-      number: 2,
-      title: "Order Details",
-      description: "Garment specifications",
-    },
-    { number: 3, title: "Measurements", description: "Body measurements" },
-    { number: 4, title: "Timeline", description: "Production schedule" },
-    { number: 5, title: "Instructions", description: "Special notes" },
-    { number: 6, title: "Review", description: "Final review" },
-  ];
 
   const [timelineData, setTimelineData] = useState({
     startDate: "31/05/2025",
@@ -386,6 +454,17 @@ const CreateOrderForm = () => {
       clientType: "",
       address: "",
       saveClientInfo: true,
+      orderItems: [
+        {
+          productType: "",
+          specificItem: "",
+          color: "",
+          quantity: 1,
+          size: "",
+          material: "",
+          specialInstructions: "",
+        },
+      ],
       measurementUnit: "cm",
       standardMeasurements: {
         chest: "",
@@ -478,8 +557,20 @@ const CreateOrderForm = () => {
         </div>
       </div>
 
+      {/* Add the Sticky Navigator */}
+      <StickyFormNavigator
+        sections={sections}
+        completedSections={completedSections}
+        onSectionClick={handleSectionNavigation}
+      />
+
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div
+        className="max-w-7xl mx-auto px-4 sm:px-6 
+  py-8 pt-16 pb-20
+  md:pt-8 md:pb-8 md:pr-6
+  xl:pr-80"
+      >
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-gray-900 mb-2">
             Create New Order
@@ -489,64 +580,78 @@ const CreateOrderForm = () => {
           </p>
         </div>
 
-        {/* Progress Steps */}
-        <ProgressSteps currentStep={currentStep} steps={steps} />
-
-        <CustomerSelection
-          onCustomerSelect={handleCustomerSelect}
-          selectedCustomer={selectedCustomer}
-        />
+        <div id="customer-selection">
+          <CustomerSelection
+            onCustomerSelect={handleCustomerSelect}
+            selectedCustomer={selectedCustomer}
+          />
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Client Information */}
-          <ClientInformation
-            data={{
-              fullName: formData.fullName,
-              emailAddress: formData.emailAddress,
-              phoneNumber: formData.phoneNumber,
-              clientType: formData.clientType,
-              address: formData.address,
-              saveClientInfo: formData.saveClientInfo,
-            }}
-            onChange={(data) => updateFormData("client", data)}
-          />
+          <div id="client-information">
+            <ClientInformation
+              data={{
+                fullName: formData.fullName,
+                emailAddress: formData.emailAddress,
+                phoneNumber: formData.phoneNumber,
+                clientType: formData.clientType,
+                address: formData.address,
+                saveClientInfo: formData.saveClientInfo,
+              }}
+              onChange={(data) => updateFormData("client", data)}
+            />
+          </div>
+          {/* Order Information */}
+          <div id="order-information">
+            <OrderInformation
+              data={formData.orderItems}
+              onChange={(data: OrderItem[]) =>
+                updateFormData("orderItems", data)
+              }
+            />
+          </div>
           {/* Measurements */}
-
-          <MeasurementInformation
-            data={{
-              measurementUnit: formData.measurementUnit,
-              standardMeasurements: formData.standardMeasurements,
-              customMeasurements: formData.customMeasurements,
-              additionalFitNotes: formData.additionalFitNotes,
-            }}
-            onChange={(data) => updateFormData("measurements", data)}
-            onStandardMeasurementChange={(data) =>
-              updateFormData("standardMeasurements", data)
-            }
-          />
-
-          {/* Production Timeline */}
-          <ProductionTimeline
-            data={timelineData}
-            onChange={handleInputChange}
-            onMilestoneUpdate={updateMilestoneDate}
-          />
+          <div id="measurements">
+            <MeasurementInformation
+              data={{
+                measurementUnit: formData.measurementUnit,
+                standardMeasurements: formData.standardMeasurements,
+                customMeasurements: formData.customMeasurements,
+                additionalFitNotes: formData.additionalFitNotes,
+              }}
+              onChange={(data) => updateFormData("measurements", data)}
+              onStandardMeasurementChange={(data) =>
+                updateFormData("standardMeasurements", data)
+              }
+            />
+          </div>
+          <div id="timeline">
+            {/* Production Timeline */}
+            <ProductionTimeline
+              data={timelineData}
+              onChange={handleInputChange}
+              onMilestoneUpdate={updateMilestoneDate}
+            />
+          </div>
 
           {/* Instructions & Design References */}
-          <InstructionsAndDesignRefs
-            data={{
-              additionalNotes: formData.additionalFitNotes,
-              uploadedFiles: [],
-              clientMaterials: false,
-            }}
-            onChange={(field: "additionalNotes" | string, value: unknown) => {
-              if (field === "additionalNotes") {
-                updateFormData("measurements", {
-                  additionalFitNotes: value as string,
-                });
-              }
-            }}
-          />
+          <div id="instructions">
+            <InstructionsAndDesignRefs
+              data={{
+                additionalNotes: formData.additionalFitNotes,
+                uploadedFiles: [],
+                clientMaterials: false,
+              }}
+              onChange={(field: "additionalNotes" | string, value: unknown) => {
+                if (field === "additionalNotes") {
+                  updateFormData("measurements", {
+                    additionalFitNotes: value as string,
+                  });
+                }
+              }}
+            />
+          </div>
           {/* Submit Button */}
           <div className="flex justify-end space-x-4">
             <button

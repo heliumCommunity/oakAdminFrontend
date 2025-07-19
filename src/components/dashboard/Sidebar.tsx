@@ -69,7 +69,7 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
         {/* Navigation */}
         <nav className="space-y-8 text-sm font-medium text-white">
           <Link
-            href="#"
+            href="/"
             className="flex items-center gap-2 hover:text-primary"
             onClick={onClose}
           >

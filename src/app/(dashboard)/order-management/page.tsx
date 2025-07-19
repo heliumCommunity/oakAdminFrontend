@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Search,
   Filter,
@@ -29,15 +29,16 @@ const OrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [priorityFilter, setPriorityFilter] = useState("All Priority");
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(true);
   // const [error, setError] = useState<string | null>(null);
-
   // Modal states
   const [showOrderSummary, setShowOrderSummary] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   interface Order {
     id: number;
@@ -65,88 +66,116 @@ const OrderManagement = () => {
     riderPhoneNumber: string | null;
   }
 
-  // Initialize with mock data
+  // Fetch orders from API
   useEffect(() => {
-    const mockData = [
-      {
-        id: 1,
-        orderId: "Order-9845",
-        trackingId: "4381",
-        dueDate: "2025-06-29T00:00:00.000+00:00",
-        customerId: "JO8856",
-        customerFirstName: "Tireni",
-        customerLastName: "Alausa",
-        customerName: "Tireni Alausa",
-        customerEmail: "john.doe@example.com",
-        customerPhoneNumber: "+1234567890",
-        customerAddress: "123 Main Street, City, Country",
-        orderFulfillmentMethod: "CARRYOUT",
-        status: "ONGOING",
-        progress: null,
-        priorityLevel: "HIGH",
-        fittingRequired: "true",
-        startDate: "2025-09-20",
-        endDate: "2025-10-30",
-        clientType: "WALK_IN",
-        additionalFitNotes: "Customer wants slim fit on sleeves.",
-        additionalNotes:
-          "Deliver before end of month. Include five extra buttons.",
-        riderName: "Alex Smith",
-        riderPhoneNumber: null,
-      },
-      {
-        id: 2,
-        orderId: "Order-8218",
-        trackingId: "5679",
-        dueDate: "2025-06-29T00:00:00.000+00:00",
-        customerId: "JO4106",
-        customerFirstName: "Tireni",
-        customerLastName: "Alausa",
-        customerName: "Tireni Alausa",
-        customerEmail: "john.doe@example.com",
-        customerPhoneNumber: "+1234567890",
-        customerAddress: "123 Main Street, City, Country",
-        orderFulfillmentMethod: "CARRYOUT",
-        status: "ONGOING",
-        progress: null,
-        priorityLevel: "HIGH",
-        fittingRequired: "true",
-        startDate: "2025-09-20",
-        endDate: "2025-10-30",
-        clientType: "WALK_IN",
-        additionalFitNotes: "Customer wants slim fit on sleeves.",
-        additionalNotes:
-          "Deliver before end of month. Include five extra buttons.",
-        riderName: "Alex Smith",
-        riderPhoneNumber: null,
-      },
-      {
-        id: 302,
-        orderId: "Order-8046",
-        trackingId: "1360",
-        dueDate: "2025-06-29T00:00:00.000+00:00",
-        customerId: "JO9316",
-        customerFirstName: "Joseph",
-        customerLastName: "",
-        customerName: "Joseph ",
-        customerEmail: "joseph@gmail.com",
-        customerPhoneNumber: "08033456789",
-        customerAddress: "no 2 rhrhknjn",
-        orderFulfillmentMethod: "CARRYOUT",
-        status: "ONGOING",
-        progress: null,
-        priorityLevel: "LOW",
-        fittingRequired: "false",
-        startDate: "2025-06-29",
-        endDate: "2025-06-29",
-        clientType: "individual",
-        additionalFitNotes: "wefwfff",
-        additionalNotes: "fsgeggg",
-        riderName: "Alex Smith",
-        riderPhoneNumber: null,
-      },
-    ];
-    setOrders(mockData);
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        // Replace with your actual API endpoint
+        const token = localStorage.getItem("token"); // or get from context/provider
+        const response = await fetch(
+          "https://oakadmin-im5t.onrender.com/api/v1/oakcollectionsadmin/admin/get-all-orders",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch orders");
+        }
+        const data = await response.json();
+        setOrders(data);
+      } catch {
+        // setError(err instanceof Error ? err.message : "An error occurred");
+        // For demo purposes, using the provided JSON data
+        const mockData = [
+          {
+            id: 1,
+            orderId: "Order-9845",
+            trackingId: "4381",
+            dueDate: "2025-06-29T00:00:00.000+00:00",
+            customerId: "JO8856",
+            customerFirstName: "Tireni",
+            customerLastName: "Alausa",
+            customerName: "Tireni Alausa",
+            customerEmail: "john.doe@example.com",
+            customerPhoneNumber: "+1234567890",
+            customerAddress: "123 Main Street, City, Country",
+            orderFulfillmentMethod: "CARRYOUT",
+            status: "ONGOING",
+            progress: null,
+            priorityLevel: "HIGH",
+            fittingRequired: "true",
+            startDate: "2025-09-20",
+            endDate: "2025-10-30",
+            clientType: "WALK_IN",
+            additionalFitNotes: "Customer wants slim fit on sleeves.",
+            additionalNotes:
+              "Deliver before end of month. Include five extra buttons.",
+            riderName: "Alex Smith",
+            riderPhoneNumber: null,
+          },
+          {
+            id: 2,
+            orderId: "Order-8218",
+            trackingId: "5679",
+            dueDate: "2025-06-29T00:00:00.000+00:00",
+            customerId: "JO4106",
+            customerFirstName: "Tireni",
+            customerLastName: "Alausa",
+            customerName: "Tireni Alausa",
+            customerEmail: "john.doe@example.com",
+            customerPhoneNumber: "+1234567890",
+            customerAddress: "123 Main Street, City, Country",
+            orderFulfillmentMethod: "CARRYOUT",
+            status: "ONGOING",
+            progress: null,
+            priorityLevel: "HIGH",
+            fittingRequired: "true",
+            startDate: "2025-09-20",
+            endDate: "2025-10-30",
+            clientType: "WALK_IN",
+            additionalFitNotes: "Customer wants slim fit on sleeves.",
+            additionalNotes:
+              "Deliver before end of month. Include five extra buttons.",
+            riderName: "Alex Smith",
+            riderPhoneNumber: null,
+          },
+          {
+            id: 302,
+            orderId: "Order-8046",
+            trackingId: "1360",
+            dueDate: "2025-06-29T00:00:00.000+00:00",
+            customerId: "JO9316",
+            customerFirstName: "Joseph",
+            customerLastName: "",
+            customerName: "Joseph ",
+            customerEmail: "joseph@gmail.com",
+            customerPhoneNumber: "08033456789",
+            customerAddress: "no 2 rhrhknjn",
+            orderFulfillmentMethod: "CARRYOUT",
+            status: "ONGOING",
+            progress: null,
+            priorityLevel: "LOW",
+            fittingRequired: "false",
+            startDate: "2025-06-29",
+            endDate: "2025-06-29",
+            clientType: "individual",
+            additionalFitNotes: "wefwfff",
+            additionalNotes: "fsgeggg",
+            riderName: "Alex Smith",
+            riderPhoneNumber: null,
+          },
+        ];
+        setOrders(mockData);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
   }, []);
 
   // Helper function to get status color
@@ -219,14 +248,13 @@ const OrderManagement = () => {
     );
   };
 
-  // const handleSelectAll = () => {
-  //   if (selectedOrders.length === filteredOrders.length) {
-  //     setSelectedOrders([]);
-  //   } else {
-  //     setSelectedOrders(filteredOrders.map((order) => order.orderId));
-  //   }
-  // };
-
+  const handleSelectAll = () => {
+    if (selectedOrders.length === filteredOrders.length) {
+      setSelectedOrders([]);
+    } else {
+      setSelectedOrders(filteredOrders.map((order) => order.orderId));
+    }
+  };
   // Action handlers
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
@@ -287,14 +315,34 @@ const OrderManagement = () => {
     setActiveDropdown(activeDropdown === orderId ? null : orderId);
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = () => {
-      setActiveDropdown(null);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setActiveDropdown(null);
+      }
     };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, []);
+
+    // Only add listener if dropdown is active
+    if (activeDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [activeDropdown]);
+
+  // Close dropdown when clicking outside
+  // useEffect(() => {
+  //   const handleClickOutside = () => {
+  //     setActiveDropdown(null);
+  //   };
+  //   document.addEventListener("click", handleClickOutside);
+  //   return () => document.removeEventListener("click", handleClickOutside);
+  // }, []);
 
   const filteredOrders = orders.filter((order: Order) => {
     const matchesSearch =
@@ -684,6 +732,25 @@ const OrderManagement = () => {
     );
   }
 
+  // if (error) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+  //       <DashboardLayout>
+  //         <div className="text-center">
+  //           <div className="text-red-500 mb-2">Error loading orders</div>
+  //           <div className="text-gray-500 text-sm">{error}</div>
+  //           <button
+  //             onClick={() => window.location.reload()}
+  //             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+  //           >
+  //             Retry
+  //           </button>
+  //         </div>
+  //       </DashboardLayout>
+  //     </div>
+  //   );
+  // }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main Content */}
@@ -794,6 +861,26 @@ const OrderManagement = () => {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
+                    <th className="px-6 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        checked={
+                          selectedOrders.length === filteredOrders.length &&
+                          filteredOrders.length > 0
+                        }
+                        onChange={handleSelectAll}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Order ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Customer
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Priority
                     </th>
